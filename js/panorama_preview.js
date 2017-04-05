@@ -26,8 +26,8 @@
 *! -----------------------------------------------------------------------------**
 */
 
-var baseWidth = 194;
-var baseHeight = 146;
+var baseWidth = 200;
+var baseHeight = 150;
 
 var W = 2592;
 var H = 1944;
@@ -124,19 +124,23 @@ function draw_image(img,index){
   
   index = +index;
   
+  var dx = Array(0,1,4);
+  var dw = Array(0,0,4);
+  
   cContext.rotate(90*Math.PI/180);
   if (index%2==0) {
-    cContext.drawImage(img, 0,0*h,w,h, 0*w,-1*h*(index+1),w,h);
-    cContext.drawImage(img, 0,1*h,w,h, 1*w,-1*h*(index+1),w,h);
+    //drawImage        img   sx,sy,  sw,sh,     dx,dy,          dw,dh
+    cContext.drawImage(img,  0,0*h+dx[0],  w,h-dw[0],  0*w,-1*h*(index+1),  w,h);
+    cContext.drawImage(img,  0,1*h+dx[1],  w,h-dw[1],  1*w,-1*h*(index+1),  w,h);
     cContext.scale(-1,1);
-    cContext.drawImage(img, 0,2*h,w,h, -3*w, -1*h*(index+1), w, h);
+    cContext.drawImage(img,  0,2*h+dx[2],  w,h-dw[2], -3*w,-1*h*(index+1), w, h);
     cContext.scale(-1,1);
   }else{
     cContext.scale(1,-1); //mirror is needed
-    cContext.drawImage(img, 0,0*h,w,h, 0*w,index*h,w,h);
-    cContext.drawImage(img, 0,1*h,w,h, 1*w,index*h,w,h);
+    cContext.drawImage(img,  0,0*h+dx[0],  w,h-dw[0], 0*w,index*h,w,h);
+    cContext.drawImage(img,  0,1*h+dx[1],  w,h-dw[1], 1*w,index*h,w,h);
     cContext.scale(-1,1);
-    cContext.drawImage(img, 0,2*h,w,h, -3*w,h*(index),w,h);
+    cContext.drawImage(img,  0,2*h+dx[2],  w,h-dw[2], -3*w,h*(index),w,h);
     cContext.scale(-1,1);
     cContext.scale(1,-1);
   }
