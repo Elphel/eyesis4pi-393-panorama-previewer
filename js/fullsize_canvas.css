@@ -1,0 +1,22 @@
+#camerawindow {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+/*    width:1200px;
+    height:600px;*/
+    padding:5px;
+    /*background:#99ff99;*/
+}
+
+.invisible_element {
+    position:absolute;
+    top:0px;
+    left:0px;
+    visibility:hidden;
+}
+
+.round_borders {
+    -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
+    border-radius: 8px;
+}

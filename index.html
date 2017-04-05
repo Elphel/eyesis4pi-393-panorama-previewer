@@ -1,0 +1,70 @@
+<html>
+<head>
+  <title>Eyesis4Pi (10393) Footage Preview</title>
+  
+  <script src="js/jquery-3.1.1.min.js" type="text/javascript"></script>
+  <script src="js/jquery_list.js"></script>
+  
+  <script src="js/elphel.js"></script>
+  <script src="js/jcanvas.min.js"></script>
+  <script src="js/exif.js"></script>
+  <script src="js/jquery-jp4.js"></script>
+
+  <script src="js/leaflet/leaflet.js"></script>
+  
+  <script type="text/javascript" src="js/os_map.js"></script>
+  
+  <script src="js/get_kml.js"></script>
+  <script src="js/map.js"></script>
+  
+  <script src="js/panorama_preview.js"></script>
+
+  <link rel="stylesheet" type="text/css" href="js/leaflet/leaflet.css" />
+  
+  <link rel="stylesheet" type="text/css" href="js/panorama_preview.css" />
+  <link rel="stylesheet" type="text/css" href="js/list.css" />
+</head>
+<body>
+ <div id=larger_preview ></div>
+  <div id=options>
+    Process files as JPEGs: <input type="checkbox" id="jpeg_mode">
+  </div>
+
+  <div id=input_date_list class=list>
+  </div>
+
+  <div id=input_text_div>
+    Image number 
+    <a id=button1 class=button onclick="image_change(-1)">-</a>
+    <input type=text id=input_image_number value="0" onchange="refresh_map()"/>
+    <a id=button2 class=button onclick="image_change(1)">+</a>
+  </div>
+ 
+  <div  id=filename_div>
+    Image name:&nbsp<div id=filename></div>
+  </div>
+
+    <div id="camerawindow" class="round_borders">
+	<a id=canvas_link href="#"><canvas id="canvas"></canvas></a>
+    </div>
+
+    <div id="status_div">
+	Status:&nbsp<div id=status>Idle</div>
+    </div>
+    
+    <div id=osmap_wrap>
+	<div id=osmap>
+	</div>
+    </div>
+
+    <div id=copy_button_div>
+	<a id=copy_all_button class=button onclick="copy_all()">Copy All</a>
+	&nbsp;OR&nbsp;
+	<input type=text id=panos_number value="1"/>
+	image set(s)
+	<a id=copy_button class=button onclick="copy_files()">Copy to</a>
+	<input type=text id=copy_path value="/data/post-processing/src/"/>
+    </div>
+
+  </body>
+</html>
