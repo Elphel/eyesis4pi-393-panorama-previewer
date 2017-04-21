@@ -34,12 +34,14 @@
     var obj = this;
     
     var settings = $.extend({
+      ip: "",
       port: "",
       image: "test.jp4",
       refresh: false,
       mosaic: [["Gr","R"],["B" ,"Gb"]],
       fast: false,
       precise: false,
+      lowres: 0, // valid values: 1,2,4,8. 0 to disable
       width: 600,
       channel: "all",
       diff: false,
@@ -51,6 +53,10 @@
       }
     },options);
 
+    // working time
+    var T0;
+    var TX;
+    
     var BAYER = settings.mosaic;
     var FLIPV = 0;
     var FLIPH = 0;
@@ -64,6 +70,13 @@
     
     // hide working canvas
     cnv_working.css({display:"none"});
+    /*
+    cnv_working.css({
+      position:"absolute",
+      top: "500px",
+      left: "500px"
+    });
+    */
     
     elem.append(cnv_working);
     elem.append(cnv_display);
@@ -81,34 +94,66 @@
       var http = new XMLHttpRequest();
       var rq = "";
 
-      if (settings.port!=""){
-        rq = "get-image.php?port="+settings.port+"&rel=bimg&ts="+Date.now();
-        settings.refresh = true;
+      if (settings.port!=""&&settings.ip!=""){
+        rq = "get-image.php?ip="+settings.ip+"&port="+settings.port+"&rel=bimg&ts="+Date.now();
+        //rq = "get-image.php?ip="+settings.ip+"&port="+settings.port+"&rel=img&ts="+Date.now();
+        //settings.refresh = true;
       }else{
         rq = settings.image;
       }
 
       http.open("GET", rq, true);
 
+      TX = Date.now();
+      T0 = Date.now();
+
       http.responseType = "blob";
       http.onload = function(e) {
-        if (this.status === 200) {
-          var heavyImage = new Image();
-          heavyImage.onload = function(){
-            EXIF.getData(this, function() {
-              //update canvas size
-              canvas.attr("width",this.width);
-              canvas.attr("height",this.height);
 
+        console.log("#"+elem.attr("id")+", file load time: "+(Date.now()-TX)/1000+" s");
+        TX = Date.now();
+
+        if (this.status === 200) {
+
+          var heavyImage = new Image();
+
+          heavyImage.onload = function(){
+
+            EXIF.getData(this, function() {
+              
+              var cnv_w;
+              var cnv_h;
+              
+              if (settings.lowres!=0){
+                cnv_w = this.width/settings.lowres;
+                cnv_h = this.height/settings.lowres;
+              }else{
+                cnv_w = this.width;
+                cnv_h = this.height;
+              }
+              
+              //update canvas size
+              canvas.attr("width",cnv_w);
+              canvas.attr("height",cnv_h);
+              
               parseEXIFMakerNote(this);
                       
               canvas.drawImage({
                 x:0, y:0,
-                source: heavyImage,
+                source: this,
+                width: cnv_w,
+                height: cnv_h,
+                //source: heavyImage,
                 load: redraw,
+                sx: 0,
+                sy: 0,
+                sWidth: this.width,
+                sHeight: this.height,
+                //scale: scale,
                 fromCenter: false
               });
             });
+
           };
           heavyImage.src = URL.createObjectURL(http.response);
         }
@@ -118,15 +163,28 @@
       
     }
         
-    var T0;
-        
     function redraw(){
+      
+      //for debugging
+      //IMAGE_FORMAT="JPEG";
+      
       $(this).draw({
-        fn: function(ctx){
+        fn: function(ctx){          
           
-          T0 = Date.now();
-          
-          if ((IMAGE_FORMAT=="JP4")||(IMAGE_FORMAT=="JP46")){
+          console.log("#"+elem.attr("id")+", raw image drawn time: "+(Date.now()-TX)/1000+" s");
+          TX = Date.now();
+                    
+          if (IMAGE_FORMAT=="JPEG"){
+            
+            // if JP4/JP46 it will work through webworker and exit later on workers message
+            Elphel.Canvas.drawScaled(cnv_working,cnv_display,settings.width);
+            
+            console.log("#"+elem.attr("id")+", Total time: "+(Date.now()-T0)/1000+" s");
+            
+            $(this).trigger("canvas_ready");
+            
+          }else if ((IMAGE_FORMAT=="JP4")||(IMAGE_FORMAT=="JP46")){
+            
             if (settings.fast){
               quickestPreview(ctx);
             }/*else{
@@ -165,11 +223,8 @@
             //saturation(ctx,SATURATION[0]);
           }
           
+          // too early
           //console.log("#"+elem.attr("id")+", time: "+(Date.now()-t0)/1000+" s");
-          
-          // custom event
-          //$(this).trigger("canvas_ready");
-          //console.log($(this));
           
           if (settings.refresh) get_image();
         }
@@ -177,13 +232,23 @@
     }
         
     function quickestPreview(ctx){
-
+      
       var worker = new Worker('js/webworker.js');
+      
+      TX = Date.now();
+
+      //ctx.canvas.width = ctx.canvas.width/2;
+      //ctx.canvas.height = ctx.canvas.height/2;
+      //ctx.canvas.style.width = ctx.canvas.style.width/4;
+      //ctx.canvas.style.height = ctx.canvas.style.height/4;
       
       var width = ctx.canvas.width;
       var height = ctx.canvas.height;
       var image = ctx.getImageData(0,0,width,height);
       var pixels = image.data;
+      
+      console.log("#"+elem.attr("id")+", data from canvas for webworker time: "+(Date.now()-TX)/1000+" s");
+      TX = Date.now();
       
       worker.postMessage({
         mosaic: settings.mosaic,
@@ -195,9 +260,11 @@
           fast:    settings.fast,
           channel: settings.channel,
           diff:    settings.diff,
-          ndvi:    settings.ndvi
+          ndvi:    settings.ndvi,
+          lowres:  settings.lowres
         },
       },[pixels.buffer]);
+      
       
       worker.onmessage = function(e){
         
@@ -207,10 +274,14 @@
         var width = e.data.width;
         var height = e.data.height;
         
+        console.log("#"+elem.attr("id")+", worker time: "+(Date.now()-TX)/1000+" s");
+        TX = Date.now();
+        
         Elphel.Canvas.putImageData(working_context,pixels,width,height);
         Elphel.Canvas.drawScaled(cnv_working,cnv_display,settings.width);
-                
-        console.log("#"+elem.attr("id")+", time: "+(Date.now()-T0)/1000+" s");
+        
+        // report time
+        console.log("#"+elem.attr("id")+", Total time: "+(Date.now()-T0)/1000+" s");
         //trigger here
         cnv_working.trigger("canvas_ready");
       }

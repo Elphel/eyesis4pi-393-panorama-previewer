@@ -208,7 +208,7 @@ function image_full_name(folder, image_number) {
         for (var i=0;i<8;i++){
             remove_hidden_div(i);
             append_hidden_div(i);
-            $("#div_"+i).jp4({image:image_name[cams[i].index-1],width:200,fast:true});
+            $("#div_"+i).jp4({image:image_name[cams[i].index-1],width:200,fast:true,lowres:4});
         }
       }
     });

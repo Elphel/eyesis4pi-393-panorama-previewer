@@ -12,10 +12,15 @@ self.onmessage = function(e) {
   
   var Pixels = new Uint8Array(e.data.pixels);
   
-  var reorderedPixels = Elphel.Pixels.reorderBlocksJPx(Pixels,W,H,Format,Mosaic,settings.fast);
-  
-  //reorder first then downscale
-  if (settings.fast){
+  if (settings.lowres==0){
+    var reorderedPixels = Elphel.Pixels.reorderBlocksJPx(Pixels,W,H,Format,Mosaic,settings.fast);
+    //reorder first then downscale
+    if (settings.fast){
+      W = W/2;
+      H = H/2;
+    }
+  }else{
+    var reorderedPixels = Elphel.Pixels.reorderBlocksJP4_lowres(Pixels,W,H,Format,Mosaic,settings.lowres);
     W = W/2;
     H = H/2;
   }
