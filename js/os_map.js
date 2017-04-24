@@ -122,7 +122,7 @@ function osm_set_current_position(mark) {
 }
 
 function osm_remove_marker(i) {
-        map.removeLayer(osm_points[i]);
+        osmap.removeLayer(osm_points[i]);
 }
 
 function osm_set_icon(mark,icon) {
